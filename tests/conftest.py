@@ -8,9 +8,12 @@ pytest フィクスチャ - DB接続とトランザクション管理
 import os
 import pytest
 
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "Database_ver.4.7.accdb"
+DB_PATH = os.environ.get(
+    "DB_PATH",
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "Database_sample.accdb"
+    )
 )
 
 

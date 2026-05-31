@@ -23,7 +23,7 @@ import pyodbc
 
 # --- 設定 ---
 ROOT_DIR = Path(__file__).resolve().parents[1]
-DB_PATH = os.environ.get("DB_PATH", str(ROOT_DIR / "Database_ver.4.7.accdb"))
+DB_PATH = os.environ.get("DB_PATH", str(ROOT_DIR / "Database_sample.accdb"))
 
 # --- 接続 ---
 def get_connection():

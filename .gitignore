@@ -4,6 +4,7 @@
 # Sensitive/local data (never publish)
 app.hta
 *.accdb
+!Database_sample.accdb
 *.mdb
 *.ldb
 *.laccdb
