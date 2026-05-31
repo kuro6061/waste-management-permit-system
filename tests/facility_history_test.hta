@@ -1,0 +1,379 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>施設履歴 UIテスト（縦タイムライン）</title>
+<HTA:APPLICATION
+  APPLICATIONNAME="FacilityHistoryTest"
+  BORDER="thick"
+  BORDERSTYLE="normal"
+  SCROLL="yes"
+  SINGLEINSTANCE="yes"
+  WINDOWSTATE="maximize"
+/>
+<style>
+/* === 基盤 === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, 'Segoe UI', 'Yu Gothic UI', 'Meiryo UI', 'Helvetica Neue', sans-serif;
+    background: #f0f2f5; min-height: 100vh; color: #1d1d1f; -webkit-font-smoothing: antialiased;
+}
+body.theme-dark { background: #15202b; color: #e7e9ea; }
+.tab-pane { background: #fff; border-radius: 14px; padding: 24px; margin: 24px 40px; max-width: 960px; }
+body.theme-dark .tab-pane { background: #192734; }
+.permit-detail { max-width: 760px; line-height: 1.7; color: #333; }
+body.theme-dark .permit-detail { color: #e7e9ea; }
+
+/* --- B2 基盤 --- */
+.b2-header { margin-bottom: 24px; }
+.b2-title { font-size: 1.6em; font-weight: 700; letter-spacing: -0.025em; color: #1d1d1f; line-height: 1.2; }
+.b2-location { font-size: 0.9em; font-weight: 400; color: #86868b; margin-top: 4px; }
+.b2-badges { display: flex; margin-top: 12px; }
+.b2-badges > * + * { margin-left: 8px; }
+body.theme-dark .b2-title { color: #f5f5f7; }
+body.theme-dark .b2-location { color: #86868b; }
+
+.b2-pill { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 0.78em; font-weight: 600; }
+.b2-pill-green { background: #e8f5e9; color: #1b7a2b; }
+.b2-pill-gray { background: #f2f2f7; color: #6e6e73; }
+.b2-pill-blue { background: #e3f2fd; color: #0a5dc2; }
+.b2-pill-red { background: #fce4ec; color: #c62828; }
+.b2-pill-amber { background: #fff8e1; color: #e65100; }
+body.theme-dark .b2-pill-green { background: #1a3328; color: #4ade80; }
+body.theme-dark .b2-pill-gray { background: #2c2c2e; color: #98989d; }
+body.theme-dark .b2-pill-blue { background: #1a2a3e; color: #64b5f6; }
+body.theme-dark .b2-pill-red { background: #3a1a1e; color: #ef5350; }
+body.theme-dark .b2-pill-amber { background: #3a2a1a; color: #ffb74d; }
+
+.b2-group-title { font-size: 0.78em; font-weight: 600; color: #86868b; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 0 8px 4px; }
+
+/* --- 縦タイムライン --- */
+.vtl { position: relative; padding-left: 32px; margin-bottom: 24px; }
+.vtl-line { position: absolute; left: 13px; top: 0; bottom: 0; width: 2px; background: #dde4ec; }
+body.theme-dark .vtl-line { background: #2a3a50; }
+.vtl-item { position: relative; padding-bottom: 24px; }
+.vtl-item:last-child { padding-bottom: 0; }
+.vtl-dot { position: absolute; left: -25px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; }
+.vtl-dot.active { background: #4CAF50; }
+.vtl-dot.expired { background: #90CAF9; }
+.vtl-dot.abolished { background: #9e9e9e; }
+.vtl-dot.cancelled { background: #ef5350; }
+.vtl-dot.suspended { background: #ffb74d; }
+body.theme-dark .vtl-dot { border-color: #192734; }
+.vtl-date { font-size: 0.78em; font-weight: 600; color: #86868b; margin-bottom: 2px; }
+.vtl-content { font-size: 0.88em; color: #1d1d1f; line-height: 1.5; }
+body.theme-dark .vtl-content { color: #e5e5e7; }
+.vtl-change { font-size: 0.82em; color: #86868b; margin-top: 2px; line-height: 1.5; }
+.vtl-change-old { color: #c62828; text-decoration: line-through; }
+.vtl-change-new { color: #1b7a2b; font-weight: 500; }
+body.theme-dark .vtl-change-old { color: #ef5350; }
+body.theme-dark .vtl-change-new { color: #4ade80; }
+
+/* --- テスト用 --- */
+.test-controls { position: fixed; top: 16px; right: 24px; z-index: 100; display: flex; }
+.test-controls > * + * { margin-left: 8px; }
+.test-ctrl-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 0.85em; font-weight: 500; }
+.test-ctrl-btn:hover { background: #f0f0f0; }
+body.theme-dark .test-ctrl-btn { background: #2a3a4a; color: #e7e9ea; border-color: #3a4a5a; }
+body.theme-dark .test-ctrl-btn:hover { background: #3a4a5a; }
+.scenario-tabs { display: flex; margin: 24px 40px 0; flex-wrap: wrap; }
+.scenario-tabs > * + * { margin-left: 2px; }
+.scenario-tab { padding: 8px 16px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 10px 10px 0 0; font-size: 0.85em; font-weight: 500; color: #666; }
+.scenario-tab.active { background: #fff; color: #1d1d1f; font-weight: 600; }
+body.theme-dark .scenario-tab { background: #1a2a40; color: #888; }
+body.theme-dark .scenario-tab.active { background: #192734; color: #e7e9ea; }
+.test-note { background: #fffde7; border: 1px solid #fff9c4; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 0.85em; color: #5d4037; line-height: 1.6; }
+body.theme-dark .test-note { background: #2a2a1a; border-color: #3a3a2a; color: #d7ccc8; }
+</style>
+<script>
+function toggleTheme() {
+    var body = document.body;
+    if (body.className.indexOf('theme-dark') >= 0) { body.className = ''; }
+    else { body.className = 'theme-dark'; }
+}
+function showScenario(id) {
+    var pages = document.getElementsByClassName('scenario-page');
+    for (var i = 0; i < pages.length; i++) pages[i].style.display = 'none';
+    document.getElementById(id).style.display = 'block';
+    var tabs = document.getElementsByClassName('scenario-tab');
+    for (var i = 0; i < tabs.length; i++) tabs[i].className = 'scenario-tab';
+    event.srcElement.className = 'scenario-tab active';
+}
+</script>
+</head>
+<body>
+
+<div class="test-controls">
+    <button class="test-ctrl-btn" onclick="toggleTheme()">Dark / Light</button>
+</div>
+
+<div class="scenario-tabs">
+    <button class="scenario-tab active" onclick="showScenario('s1')">1: 住所変更（3版）</button>
+    <button class="scenario-tab" onclick="showScenario('s2')">2: 廃止あり（2版）</button>
+    <button class="scenario-tab" onclick="showScenario('s3')">3: 休止→再開</button>
+    <button class="scenario-tab" onclick="showScenario('s4')">4: 取消（1版）</button>
+    <button class="scenario-tab" onclick="showScenario('s5')">5: 変更なし（1版）</button>
+    <button class="scenario-tab" onclick="showScenario('s6')">6: 複雑（5版+休止）</button>
+</div>
+
+<!-- ============================================ -->
+<!-- 1: 住所変更で3バージョン -->
+<!-- ============================================ -->
+<div class="tab-pane scenario-page" id="s1" style="display:block;">
+<div class="permit-detail">
+
+    <div class="test-note">住所と許可年月日の変更で3バージョン。典型的なケース。</div>
+
+    <div class="b2-header">
+        <div class="b2-title">中間処理施設（破砕）</div>
+        <div class="b2-location">秋田市外旭川字水口155-1</div>
+        <div class="b2-badges">
+            <span class="b2-pill b2-pill-green">有効</span>
+            <span class="b2-pill b2-pill-blue">固定式</span>
+        </div>
+    </div>
+
+    <div class="b2-group-title">履歴</div>
+    <div class="vtl">
+        <div class="vtl-line"></div>
+        <div class="vtl-item">
+            <div class="vtl-dot active"></div>
+            <div class="vtl-date">2023/04/01 ～ 現在 <span class="b2-pill b2-pill-green" style="margin-left:8px;">有効</span></div>
+            <div class="vtl-content">v3 — 許可更新</div>
+            <div class="vtl-change">許可年月日: <span class="vtl-change-old">2021/04/01</span> → <span class="vtl-change-new">2023/04/01</span></div>
+        </div>
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2021/04/01 ～ 2023/04/01</div>
+            <div class="vtl-content">v2 — 住所変更</div>
+            <div class="vtl-change">設置場所: <span class="vtl-change-old">秋田市泉中央2丁目8-1</span> → <span class="vtl-change-new">秋田市外旭川字水口155-1</span></div>
+        </div>
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2018/06/15 ～ 2021/04/01</div>
+            <div class="vtl-content">v1 — 新規登録</div>
+            <div class="vtl-change">許可番号 00510120013 / 秋田市泉中央2丁目8-1</div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 2: 廃止あり -->
+<!-- ============================================ -->
+<div class="tab-pane scenario-page" id="s2" style="display:none;">
+<div class="permit-detail">
+
+    <div class="test-note">v2で許可更新後、廃止された施設。廃止は状態変更として表示。</div>
+
+    <div class="b2-header">
+        <div class="b2-title">中間処理施設（焼却）</div>
+        <div class="b2-location">秋田市新屋町字砂奴寄4-4</div>
+        <div class="b2-badges">
+            <span class="b2-pill b2-pill-gray">廃止</span>
+            <span class="b2-pill b2-pill-blue">固定式</span>
+        </div>
+    </div>
+
+    <div class="b2-group-title">履歴</div>
+    <div class="vtl">
+        <div class="vtl-line"></div>
+        <div class="vtl-item">
+            <div class="vtl-dot abolished"></div>
+            <div class="vtl-date">2022/04/01 ～ 廃止(2025/09/30) <span class="b2-pill b2-pill-gray" style="margin-left:8px;">廃止</span></div>
+            <div class="vtl-content">v2 — 許可更新後に廃止</div>
+            <div class="vtl-change">
+                許可年月日: <span class="vtl-change-old">2017/11/15</span> → <span class="vtl-change-new">2022/04/01</span><br>
+                廃止日: <span style="color:#c62828;font-weight:500;">2025/09/30</span>
+            </div>
+        </div>
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2015/04/01 ～ 2022/04/01</div>
+            <div class="vtl-content">v1 — 新規登録</div>
+            <div class="vtl-change">許可番号 00510120008 / 秋田市新屋町字砂奴寄4-4</div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 3: 休止→再開 -->
+<!-- ============================================ -->
+<div class="tab-pane scenario-page" id="s3" style="display:none;">
+<div class="permit-detail">
+
+    <div class="test-note">休止期間があった後に再開した施設。休止イベントを独立ノードで表示。</div>
+
+    <div class="b2-header">
+        <div class="b2-title">中間処理施設（脱水）</div>
+        <div class="b2-location">秋田市八橋大畑1丁目5-12</div>
+        <div class="b2-badges">
+            <span class="b2-pill b2-pill-green">有効</span>
+            <span class="b2-pill b2-pill-blue">固定式</span>
+        </div>
+    </div>
+
+    <div class="b2-group-title">履歴</div>
+    <div class="vtl">
+        <div class="vtl-line"></div>
+        <div class="vtl-item">
+            <div class="vtl-dot active"></div>
+            <div class="vtl-date">2026/01/15 再開 <span class="b2-pill b2-pill-green" style="margin-left:8px;">有効</span></div>
+            <div class="vtl-content">操業再開</div>
+            <div class="vtl-change">休止期間: <span style="color:#e65100;">2025/04/01 ～ 2026/01/15（約9ヶ月）</span></div>
+        </div>
+        <div class="vtl-item">
+            <div class="vtl-dot suspended"></div>
+            <div class="vtl-date" style="color:#e65100;">2025/04/01 休止</div>
+            <div class="vtl-content" style="color:#e65100;">操業休止</div>
+        </div>
+        <div class="vtl-item">
+            <div class="vtl-dot active"></div>
+            <div class="vtl-date">2020/10/01 ～ 2025/04/01</div>
+            <div class="vtl-content">v1 — 新規登録</div>
+            <div class="vtl-change">許可番号 00510120040 / 秋田市八橋大畑1丁目5-12</div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 4: 取消（1版のみ） -->
+<!-- ============================================ -->
+<div class="tab-pane scenario-page" id="s4" style="display:none;">
+<div class="permit-detail">
+
+    <div class="test-note">行政処分により許可が取り消された施設。バージョンは1つだけ。</div>
+
+    <div class="b2-header">
+        <div class="b2-title">中間処理施設（圧縮）</div>
+        <div class="b2-location">秋田市仁井田本町4丁目11-8</div>
+        <div class="b2-badges">
+            <span class="b2-pill b2-pill-red">取消</span>
+            <span class="b2-pill b2-pill-blue">固定式</span>
+        </div>
+    </div>
+
+    <div class="b2-group-title">履歴</div>
+    <div class="vtl">
+        <div class="vtl-line"></div>
+        <div class="vtl-item">
+            <div class="vtl-dot cancelled"></div>
+            <div class="vtl-date">2017/03/20 ～ 取消(2025/11/15) <span class="b2-pill b2-pill-red" style="margin-left:8px;">取消</span></div>
+            <div class="vtl-content">v1 — 行政処分による許可取消</div>
+            <div class="vtl-change">取消日: <span style="color:#c62828;font-weight:500;">2025/11/15</span></div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 5: 変更なし（1版のみ） -->
+<!-- ============================================ -->
+<div class="tab-pane scenario-page" id="s5" style="display:none;">
+<div class="permit-detail">
+
+    <div class="test-note">新設して以来、変更がない施設。ノード1つだけの最小ケース。</div>
+
+    <div class="b2-header">
+        <div class="b2-title">中間処理施設（選別）</div>
+        <div class="b2-location">秋田市御所野下堤5丁目1-1</div>
+        <div class="b2-badges">
+            <span class="b2-pill b2-pill-green">有効</span>
+            <span class="b2-pill b2-pill-blue">固定式</span>
+        </div>
+    </div>
+
+    <div class="b2-group-title">履歴</div>
+    <div class="vtl">
+        <div class="vtl-line"></div>
+        <div class="vtl-item">
+            <div class="vtl-dot active"></div>
+            <div class="vtl-date">2023/09/01 ～ 現在 <span class="b2-pill b2-pill-green" style="margin-left:8px;">有効</span></div>
+            <div class="vtl-content">v1 — 新規登録</div>
+            <div class="vtl-change">変更履歴なし</div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- 6: 複雑（5版+休止再開） -->
+<!-- ============================================ -->
+<div class="tab-pane scenario-page" id="s6" style="display:none;">
+<div class="permit-detail">
+
+    <div class="test-note">
+        5バージョン + 休止・再開を含む複雑な履歴。<br>
+        住所変更、品目追加、許可更新、休止・再開が全て混在するケース。
+    </div>
+
+    <div class="b2-header">
+        <div class="b2-title">中間処理施設（破砕・圧縮）</div>
+        <div class="b2-location">秋田市雄和妙法字上大部22-2</div>
+        <div class="b2-badges">
+            <span class="b2-pill b2-pill-green">有効</span>
+            <span class="b2-pill b2-pill-blue">固定式</span>
+        </div>
+    </div>
+
+    <div class="b2-group-title">履歴</div>
+    <div class="vtl">
+        <div class="vtl-line"></div>
+
+        <div class="vtl-item">
+            <div class="vtl-dot active"></div>
+            <div class="vtl-date">2023/07/01 ～ 現在 <span class="b2-pill b2-pill-green" style="margin-left:8px;">有効</span></div>
+            <div class="vtl-content">v5 — 種別変更・品目追加</div>
+            <div class="vtl-change">
+                施設種別: <span class="vtl-change-old">破砕</span> → <span class="vtl-change-new">破砕・圧縮</span><br>
+                品目: <span class="vtl-change-new">金属くず 追加</span>
+            </div>
+        </div>
+
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2021/10/01 ～ 2023/07/01</div>
+            <div class="vtl-content">v4 — 再開</div>
+            <div class="vtl-change">休止期間: <span style="color:#e65100;">2021/01/01 ～ 2021/10/01（9ヶ月）</span></div>
+        </div>
+
+        <div class="vtl-item">
+            <div class="vtl-dot suspended"></div>
+            <div class="vtl-date" style="color:#e65100;">2021/01/01 休止</div>
+            <div class="vtl-content" style="color:#e65100;">操業休止</div>
+        </div>
+
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2019/04/01 ～ 2021/01/01</div>
+            <div class="vtl-content">v3 — 品目追加</div>
+            <div class="vtl-change">品目: <span class="vtl-change-new">廃プラスチック類 追加</span></div>
+        </div>
+
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2017/04/01 ～ 2019/04/01</div>
+            <div class="vtl-content">v2 — 住所変更</div>
+            <div class="vtl-change">設置場所: <span class="vtl-change-old">下大部10-5</span> → <span class="vtl-change-new">上大部22-2</span></div>
+        </div>
+
+        <div class="vtl-item">
+            <div class="vtl-dot expired"></div>
+            <div class="vtl-date">2015/04/01 ～ 2017/04/01</div>
+            <div class="vtl-content">v1 — 新規登録</div>
+            <div class="vtl-change">許可番号 00510120025 / 秋田市雄和妙法字下大部10-5</div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+</body>
+</html>

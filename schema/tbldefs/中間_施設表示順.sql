@@ -1,0 +1,6 @@
+﻿CREATE TABLE [中間_施設表示順] (
+  [施設表示順ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [施設ID] LONG,
+  [許可区分ID] LONG,
+  [表示順] LONG
+)

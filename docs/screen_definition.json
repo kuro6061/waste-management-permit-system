@@ -1,0 +1,894 @@
+{
+  "$schema": "screen_definition_schema",
+  "$comment": "廃棄物処理業許可管理システム - HTA UI構造定義。階層・入力欄・ボタンの機械可読表現。",
+
+  "pages": {
+    "home": {
+      "id": "page-home",
+      "title": "ホーム",
+      "layout": "home-container",
+      "sections": [
+        {
+          "id": "statsStrip",
+          "type": "stats_strip",
+          "label": "統計ストリップ",
+          "items": [
+            { "id": "strip-biz", "label": "事業者", "type": "display" },
+            { "id": "strip-permit", "label": "有効許可", "type": "display" },
+            { "id": "strip-facility", "label": "稼働施設", "type": "display" },
+            { "id": "strip-expiring", "label": "期限1年以内", "type": "display", "clickAction": "showPage('search-permit')" }
+          ]
+        },
+        {
+          "id": "menu-search",
+          "type": "menu_group",
+          "label": "検索",
+          "layout": "menu-grid menu-grid-4",
+          "buttons": [
+            { "label": "業検索", "desc": "業の検索・絞り込み", "icon": "📄", "action": "showPage('search-permit')", "badge": "permitBadge" },
+            { "label": "施設検索", "desc": "施設情報の検索", "icon": "🏭", "action": "showPage('search-facility')" },
+            { "label": "車両検索", "desc": "車両情報の検索", "icon": "🚚", "action": "showPage('search-vehicle')" },
+            { "label": "役員検索", "desc": "役員情報の検索", "icon": "👤", "action": "showPage('search-officer')" }
+          ]
+        },
+        {
+          "id": "menu-manage",
+          "type": "menu_group",
+          "label": "管理",
+          "layout": "menu-grid",
+          "buttons": [
+            { "label": "事業者一覧", "desc": "登録事業者の一覧表示", "icon": "📋", "action": "loadBusinessList()" },
+            { "label": "事業者登録", "desc": "新規事業者の登録", "icon": "➕", "action": "openBusinessForm(0)" },
+            { "label": "設定", "desc": "マスタ・テーマ設定", "icon": "⚙", "action": "showPage('settings')" }
+          ]
+        }
+      ]
+    },
+
+    "search_business": {
+      "id": "page-search",
+      "title": "事業者検索",
+      "subtitle": "Business Search",
+      "backButton": "goBack()",
+      "fields": [
+        { "id": "searchKeyword", "label": "検索キーワード", "type": "text", "placeholder": "事業者名、電話番号、住所で検索...", "enterKey": "searchBusiness()" }
+      ],
+      "searchButton": "searchBusiness()",
+      "resultArea": "searchResults",
+      "resultAction": "loadBusinessDetail(businessId)"
+    },
+
+    "search_permit": {
+      "id": "page-search-permit",
+      "title": "業検索",
+      "subtitle": "Permit Search",
+      "backButton": "goBack()",
+      "fields": [
+        { "id": "searchPermitKeyword", "label": "検索キーワード", "type": "text", "placeholder": "許可番号、事業者名で検索...", "enterKey": "searchPermit()" },
+        { "id": "searchPermitAsOfDateValue", "label": "検索基準日", "type": "date_picker", "note": "as-of検索（過去時点の有効許可を検索）" }
+      ],
+      "searchButton": "searchPermit()",
+      "advancedFilters": {
+        "toggleButton": "btnAdvancedFilters",
+        "fields": [
+          { "id": "searchPermitCategory", "label": "許可区分", "type": "select", "source": "マスター_許可区分", "default": "" },
+          { "id": "searchPermitExpiry", "label": "有効期限", "type": "select", "options": [
+            { "value": "valid", "label": "有効期限内" },
+            { "value": "", "label": "全て" },
+            { "value": "expired", "label": "期限切れ" },
+            { "value": "30days", "label": "30日以内に期限切れ" },
+            { "value": "90days", "label": "90日以内に期限切れ" },
+            { "value": "1year", "label": "1年以内に期限切れ" }
+          ], "default": "valid" },
+          { "id": "searchPermitStatus", "label": "状態", "type": "select", "options": [
+            { "value": "", "label": "全て" },
+            { "value": "active", "label": "有効" },
+            { "value": "abolished", "label": "廃止" },
+            { "value": "cancelled", "label": "取消" }
+          ], "default": "" },
+          { "id": "searchPermitExcellent", "label": "優良認定のみ", "type": "toggle", "default": false },
+          { "id": "searchPermitItemsContainer", "label": "取扱品目", "type": "checkbox_group", "source": "マスター_品目" },
+          { "id": "searchPermitItemMode", "label": "品目検索モード", "type": "radio", "options": [
+            { "value": "or", "label": "OR検索（いずれか含む）" },
+            { "value": "and", "label": "AND検索（すべて含む）" }
+          ], "default": "or" }
+        ]
+      },
+      "resultArea": "permitSearchResults",
+      "resultAction": "loadBusinessDetail(businessId)"
+    },
+
+    "search_facility": {
+      "id": "page-search-facility",
+      "title": "施設検索",
+      "subtitle": "Facility Search",
+      "backButton": "goBack()",
+      "fields": [
+        { "id": "searchFacilityKeyword", "label": "検索キーワード", "type": "text", "placeholder": "設置場所、許可番号、事業者名で検索...", "enterKey": "searchFacility()" }
+      ],
+      "searchButton": "searchFacility()",
+      "advancedFilters": {
+        "fields": [
+          { "id": "searchFacilityType", "label": "施設種別", "type": "select", "source": "マスター_施設種別", "default": "" },
+          { "id": "searchFacilityStatus", "label": "状態", "type": "select", "options": [
+            { "value": "active", "label": "稼働中" },
+            { "value": "", "label": "全て" },
+            { "value": "abolished", "label": "廃止" }
+          ], "default": "active" }
+        ]
+      },
+      "resultArea": "facilitySearchResults"
+    },
+
+    "search_vehicle": {
+      "id": "page-search-vehicle",
+      "title": "車両検索",
+      "subtitle": "Vehicle Search",
+      "backButton": "goBack()",
+      "fields": [
+        { "id": "searchVehicleKeyword", "label": "検索キーワード", "type": "text", "placeholder": "登録番号、事業者名で検索...", "enterKey": "searchVehicle()" },
+        { "id": "searchVehicleIncludeScrapped", "label": "廃車を含む", "type": "toggle", "default": false }
+      ],
+      "searchButton": "searchVehicle()",
+      "resultArea": "vehicleSearchResults"
+    },
+
+    "search_officer": {
+      "id": "page-search-officer",
+      "title": "役員検索",
+      "subtitle": "Officer Search",
+      "backButton": "goBack()",
+      "fields": [
+        { "id": "searchOfficerKeyword", "label": "検索キーワード", "type": "text", "placeholder": "氏名、役職名、事業者名で検索...", "enterKey": "searchOfficer()" }
+      ],
+      "searchButton": "searchOfficer()",
+      "resultArea": "officerSearchResults"
+    },
+
+    "business_list": {
+      "id": "page-list",
+      "title": "事業者一覧",
+      "subtitle": "Business List",
+      "backButton": "goBack()",
+      "buttons": [
+        { "label": "+ 新規登録", "style": "btn-add", "action": "openBusinessForm(0)" }
+      ],
+      "resultArea": "businessList",
+      "resultAction": "loadBusinessDetail(businessId)"
+    },
+
+    "business_detail": {
+      "id": "page-detail",
+      "title": "事業者詳細",
+      "backButton": "goBack()",
+      "contentArea": "businessDetail",
+      "layout": "tab_container",
+      "tabs": [
+        {
+          "id": "tab-info",
+          "label": "基本情報",
+          "badgeCount": false,
+          "display": [
+            { "label": "事業者ID" },
+            { "label": "郵便番号" },
+            { "label": "都道府県" },
+            { "label": "住所" },
+            { "label": "電話番号" }
+          ],
+          "buttons": [
+            { "label": "編集", "style": "btn-secondary", "action": "openBusinessForm(id)" },
+            { "label": "削除", "style": "btn-danger btn-sm", "action": "deleteBusiness(id)", "position": "right" }
+          ]
+        },
+        {
+          "id": "tab-permits",
+          "label": "業",
+          "badgeCount": true,
+          "content": "loadPermitsForBusiness(id)",
+          "listAction": "showPermitDetail(permitId, logicalId, businessId)",
+          "addButton": { "label": "+ 業追加", "action": "openPermitForm(businessId)" }
+        },
+        {
+          "id": "tab-facilities",
+          "label": "施設",
+          "badgeCount": true,
+          "content": "loadFacilitiesForBusiness(id)",
+          "listAction": "showFacilityDetail(facilityId, logicalId, businessId)",
+          "addButton": { "label": "+ 施設追加", "action": "openFacilityForm(businessId)" }
+        },
+        {
+          "id": "tab-vehicles",
+          "label": "車両",
+          "badgeCount": true,
+          "content": "loadVehiclesForBusiness(id)",
+          "addButton": { "label": "+ 車両追加", "action": "openVehicleForm(0, businessId)" }
+        },
+        {
+          "id": "tab-officers",
+          "label": "役員",
+          "badgeCount": true,
+          "content": "loadOfficersForBusiness(id)",
+          "addButton": { "label": "+ 役員追加", "action": "openOfficerForm(0)" }
+        }
+      ]
+    },
+
+    "settings": {
+      "id": "page-settings",
+      "title": "設定",
+      "subtitle": "Settings",
+      "backButton": "goBack()",
+      "sections": [
+        {
+          "type": "card",
+          "label": "データベース設定",
+          "display": [
+            { "id": "dbPathDisplay", "label": "データベースパス" },
+            { "id": "dbStatusDisplay", "label": "接続状態" }
+          ],
+          "editMode": {
+            "fields": [
+              { "id": "inputDbPath", "label": "データベースファイル (.accdb)", "type": "text", "placeholder": "データベースファイルのパスを入力..." }
+            ],
+            "buttons": [
+              { "label": "参照", "action": "browseDbFile()" },
+              { "label": "接続", "style": "btn-success", "action": "applyDbPath()" },
+              { "label": "キャンセル", "style": "btn-secondary", "action": "cancelDbSettingsEdit()" },
+              { "label": "デフォルトに戻す", "style": "btn-secondary", "action": "resetDbPath()", "position": "right" }
+            ]
+          }
+        },
+        {
+          "type": "card",
+          "label": "データメンテナンス",
+          "description": "有効開始日時が未設定のレコードを一括で補完します。",
+          "statusArea": "migration-status",
+          "buttons": [
+            { "label": "未設定件数を確認", "style": "btn-primary", "action": "checkMissingDates()" },
+            { "label": "一括補完を実行", "style": "btn-success", "action": "fixMissingDates()" }
+          ]
+        },
+        {
+          "type": "card",
+          "label": "旧システム データインポート",
+          "description": "旧システム（産廃sys ver3）の Access DB から役員・車両データをインポートします。",
+          "statusArea": "import-status",
+          "buttons": [
+            { "label": "旧システムからインポート", "style": "btn-primary", "action": "startLegacyImport()" }
+          ]
+        },
+        {
+          "type": "card",
+          "label": "マスター設定",
+          "groups": [
+            {
+              "label": "許可・事業者",
+              "buttons": [
+                { "label": "許可区分", "action": "showMasterSettings('許可区分')" },
+                { "label": "許可対象区分", "action": "showMasterSettings('許可対象区分')" },
+                { "label": "許可番号形式", "action": "showMasterSettings('許可番号形式')" },
+                { "label": "事業者区分", "action": "showMasterSettings('事業者区分')" },
+                { "label": "認定区分", "action": "showMasterSettings('認定区分')" },
+                { "label": "役職", "action": "showMasterSettings('役職')" }
+              ]
+            },
+            {
+              "label": "施設・処理",
+              "buttons": [
+                { "label": "施設種別", "action": "showMasterSettings('施設種別')" },
+                { "label": "処理方法", "action": "showMasterSettings('処理方法')" },
+                { "label": "日処理能力単位", "action": "showMasterSettings('日処理能力単位')" },
+                { "label": "時間処理能力単位", "action": "showMasterSettings('時間処理能力単位')" },
+                { "label": "設置形態区分", "action": "showMasterSettings('設置形態区分')" }
+              ]
+            },
+            {
+              "label": "品目・分類",
+              "buttons": [
+                { "label": "品目", "action": "showMasterSettings('品目')" },
+                { "label": "廃棄物種類区分", "action": "showMasterSettings('廃棄物種類区分')" },
+                { "label": "取扱区分", "action": "showMasterSettings('取扱区分')" },
+                { "label": "形式", "action": "showMasterSettings('形式')" },
+                { "label": "管理区分", "action": "showMasterSettings('管理区分')" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    "master_list": {
+      "id": "page-master",
+      "title": "マスター設定（動的タイトル）",
+      "backButton": "goBack()",
+      "buttons": [
+        { "label": "+ 新規追加", "style": "btn-add", "action": "openMasterForm(0)" }
+      ],
+      "resultArea": "masterList"
+    },
+
+    "master_form": {
+      "id": "page-master-form",
+      "title": "マスター編集（動的タイトル）",
+      "backButton": "cancelMasterForm()",
+      "fields": "動的生成（マスター種別に応じたフィールド）",
+      "buttons": [
+        { "label": "キャンセル", "style": "btn-secondary", "action": "cancelMasterForm()" },
+        { "label": "保存", "style": "btn-success", "action": "saveMaster()" }
+      ]
+    }
+  },
+
+  "forms": {
+    "business": {
+      "id": "page-business-form",
+      "title": { "new": "事業者登録", "edit": "事業者編集" },
+      "subtitle": { "new": "Business Registration", "edit": "Edit Business" },
+      "backButton": "cancelBusinessForm()",
+      "fields": [
+        { "id": "inputBusinessName", "label": "事業者名", "type": "text", "required": true, "placeholder": "例: 株式会社○○環境" },
+        { "id": "inputBusinessType", "label": "事業者区分", "type": "select", "required": false, "source": "マスター_事業者区分" },
+        {
+          "layout": "form-row",
+          "children": [
+            { "id": "inputZipCode", "label": "郵便番号", "type": "text", "required": false, "placeholder": "例: 123-4567" },
+            { "id": "inputPrefecture", "label": "都道府県", "type": "select", "required": false, "source": "47都道府県固定リスト" }
+          ]
+        },
+        { "id": "inputAddress", "label": "市区町村・町名番地", "type": "text", "required": false, "placeholder": "例: ○○市△△町1-2-3" },
+        { "id": "inputPhone", "label": "電話番号", "type": "text", "required": false, "placeholder": "例: 03-1234-5678" }
+      ],
+      "buttons": [
+        { "label": "キャンセル", "style": "btn-secondary", "action": "cancelBusinessForm()" },
+        { "label": "保存", "style": "btn-success", "action": "saveBusiness()" }
+      ],
+      "dangerZone": {
+        "condition": "editMode",
+        "label": "この事業者を完全に削除する",
+        "description": "関連する許可・施設・車両・役員も全て削除されます。この操作は取り消せません。",
+        "button": { "label": "事業者を削除", "style": "btn-danger", "action": "deleteBusinessFromEdit()" }
+      }
+    },
+
+    "permit_add": {
+      "location": "tab-permits内（インライン）",
+      "title": "業追加",
+      "breadcrumb": ["業一覧", "業追加"],
+      "fields": [
+        { "id": "pCategory", "label": "許可区分", "type": "select", "required": true, "source": "マスター_許可区分", "onchange": "onNewPermitCategoryChange()" },
+        { "id": "pNumber", "label": "許可番号", "type": "text", "required": true, "placeholder": "例: 12345", "normalize": "全角→半角" },
+        {
+          "layout": "form-row",
+          "children": [
+            { "id": "pDate", "label": "許可年月日", "type": "date_picker", "required": true },
+            { "id": "pValidDate", "label": "許可有効年月日", "type": "date_picker", "required": true }
+          ]
+        },
+        { "id": "pExcellent", "label": "優良認定", "type": "toggle", "required": false }
+      ],
+      "sections": [
+        {
+          "id": "newPermitItemsGrid",
+          "title": "取扱品目",
+          "type": "item_grid",
+          "description": "許可区分選択後に表示。〇=取扱 ◎=積替保管 ×=なし（クリックで切替）",
+          "dependsOn": "pCategory",
+          "saveWithParent": true
+        }
+      ],
+      "buttons": [
+        { "label": "保存", "style": "btn-primary", "action": "savePermit()" },
+        { "label": "キャンセル", "style": "btn-secondary", "action": "cancelPermitForm()" }
+      ],
+      "postSaveAction": "showPermitEditForm（品目は保存済み）"
+    },
+
+    "permit_edit": {
+      "location": "tab-permits内（インライン）",
+      "title": { "renewal": "許可更新", "change": "許可変更（法14条の2）", "expiredNew": "失効新規", "edit": "許可修正" },
+      "breadcrumb": ["業一覧", "許可詳細", "（更新/変更/失効新規/修正）"],
+      "modes": ["renewal", "change", "expiredNew", "edit"],
+      "fields": [
+        { "id": "edit-permit-number", "label": "許可番号", "type": "text", "required": true,
+          "modeConfig": { "renewal": "inherited", "change": "inherited", "edit": "editable" } },
+        { "id": "edit-permit-category", "label": "許可区分", "type": "select", "required": true, "source": "マスター_許可区分",
+          "modeConfig": { "renewal": "inherited", "change": "inherited", "edit": "editable" } },
+        { "id": "edit-permit-date", "label": "許可年月日", "type": "date_picker", "required": true,
+          "modeConfig": { "renewal": "empty", "change": "empty", "edit": "editable" } },
+        { "id": "edit-permit-valid", "label": "許可有効年月日", "type": "date_picker", "required": true,
+          "modeConfig": { "renewal": "empty_with_shortcuts", "change": "readonly_inherited", "edit": "editable" },
+          "shortcuts": ["+5年", "+7年（優良）"] },
+        { "id": "edit-permit-start", "label": "有効開始日時", "type": "text",
+          "modeConfig": { "renewal": "readonly_with_admin_override", "change": "readonly_with_admin_override", "expiredNew": "readonly_with_admin_override", "edit": "readonly_with_admin_override" } },
+        { "id": "edit-permit-end", "label": "有効終了日時", "type": "text",
+          "modeConfig": { "renewal": "readonly_with_admin_override", "change": "readonly_with_admin_override", "expiredNew": "readonly_with_admin_override", "edit": "readonly_with_admin_override" } },
+        { "id": "edit-permit-excellent", "label": "優良認定", "type": "toggle",
+          "modeConfig": { "renewal": "inherited", "change": "inherited", "edit": "editable" } },
+        { "id": "permit-edit-items", "label": "取扱品目", "type": "inline_table",
+          "modeConfig": { "renewal": "readonly", "change": "editable", "edit": "editable" } }
+      ]
+    },
+
+    "facility_add": {
+      "location": "tab-facilities内（インライン）",
+      "title": "施設追加",
+      "breadcrumb": ["施設一覧", "施設追加"],
+      "fields": [
+        { "id": "fType", "label": "施設種別", "type": "select", "required": true, "source": "マスター_施設種別", "onChange": "toggleFacilityTypeFields()" },
+        { "id": "fLocation", "label": "設置場所", "type": "text", "required": true, "placeholder": "住所を入力" },
+        { "id": "fPermitNo", "label": "許可番号", "type": "text", "required": "conditional", "conditionalOn": "fPermitTarget=許可対象施設", "badgeId": "fPermitNo-badge", "normalize": "全角→半角" },
+        {
+          "layout": "form-row",
+          "children": [
+            { "id": "fPermitDate", "label": "許可年月日", "type": "date_picker", "required": false },
+            { "id": "fSetupDate", "label": "設置年月日", "type": "date_picker", "required": false }
+          ]
+        }
+      ],
+      "conditionalFields": {
+        "landfill": {
+          "id": "landfill-fields",
+          "condition": "施設種別 === 最終処分場",
+          "fields": [
+            { "id": "fMgmtType", "label": "管理区分", "type": "select", "required": false, "source": "マスター_管理区分" },
+            {
+              "layout": "form-row",
+              "children": [
+                { "id": "fCapacity", "label": "容量(㎥)", "type": "number", "required": false },
+                { "id": "fArea", "label": "面積(㎡)", "type": "number", "required": false }
+              ]
+            },
+            { "id": "fLandfillEnd", "label": "埋立終了年月日", "type": "date_picker", "required": false }
+          ]
+        },
+        "processing": {
+          "id": "processing-fields",
+          "condition": "施設種別 === 中間処理施設",
+          "fields": [
+            { "id": "fMethod", "label": "処理方法", "type": "select", "required": false, "source": "マスター_処理方法" },
+            { "id": "fSetupForm", "label": "設置形態", "type": "select", "required": false, "source": "マスター_設置形態区分" },
+            { "id": "fPermitTarget", "label": "許可対象区分", "type": "select", "required": false, "source": "マスター_許可対象区分" }
+          ],
+          "sections": [
+            {
+              "id": "newFacilityCapacityList",
+              "type": "capacity_inline",
+              "title": "処理能力",
+              "description": "施設作成時に処理能力をインラインで追加可能",
+              "fields": [
+                { "id": "fCapItem", "label": "品目", "type": "select", "required": true, "source": "マスター_品目" },
+                { "id": "fCapUnit", "label": "単位", "type": "select", "source": "マスター_時間処理能力単位" },
+                { "id": "fCapHour", "label": "時間処理能力", "type": "number", "required": "either_hour_or_day" },
+                { "id": "fCapDay", "label": "日処理能力", "type": "number", "required": "either_hour_or_day" },
+                { "id": "fCapHours", "label": "稼働時間", "type": "number", "required": false, "min": 0, "max": 24 },
+                { "id": "fCapNote", "label": "特記事項", "type": "textarea", "required": false }
+              ],
+              "addButton": { "label": "＋ 処理能力を追加", "action": "addPendingCapacity()" }
+            }
+          ]
+        }
+      },
+      "storageFields": {
+        "label": "保管施設情報",
+        "layout": "form-row",
+        "fields": [
+          { "id": "fStorageArea", "label": "保管面積(㎡)", "type": "number", "required": false },
+          { "id": "fStorageCap", "label": "保管量上限(㎥)", "type": "number", "required": false },
+          { "id": "fStorageHeight", "label": "保管高さ(m)", "type": "number", "required": false }
+        ]
+      },
+      "buttons": [
+        { "label": "保存", "style": "btn-primary", "action": "saveFacility()" },
+        { "label": "キャンセル", "style": "btn-secondary", "action": "cancelFacilityForm()" }
+      ],
+      "postSaveAction": "showFacilityDetail → 施設一覧へ戻る"
+    },
+
+    "facility_edit": {
+      "location": "tab-facilities内（インライン）",
+      "title": { "renewal": "施設変更", "edit": "施設修正" },
+      "modes": ["renewal", "edit"],
+      "fields": [
+        { "id": "edit-fac-type", "label": "施設種別", "type": "select", "required": true, "source": "マスター_施設種別" },
+        { "id": "edit-fac-location", "label": "設置場所", "type": "text", "required": true },
+        { "id": "edit-fac-permit-no", "label": "許可番号", "type": "text", "required": false },
+        { "id": "edit-fac-permit-date", "label": "許可年月日", "type": "date_picker", "required": false },
+        { "id": "edit-fac-setup-date", "label": "設置年月日", "type": "date_picker", "required": false },
+        { "id": "edit-fac-start", "label": "有効開始日時", "type": "text",
+          "modeConfig": { "renewal": "hidden", "edit": "readonly_with_admin_override" } },
+        { "id": "edit-fac-end", "label": "有効終了日時", "type": "text",
+          "modeConfig": { "renewal": "hidden", "edit": "readonly" } }
+      ],
+      "conditionalFields": {
+        "landfill": {
+          "condition": "施設種別 === 最終処分場",
+          "fields": [
+            { "id": "edit-fac-mgmt-type", "label": "管理区分", "type": "select", "required": false, "source": "マスター_管理区分" },
+            { "id": "edit-fac-capacity", "label": "容量(㎥)", "type": "number", "required": false },
+            { "id": "edit-fac-area", "label": "面積(㎡)", "type": "number", "required": false },
+            { "id": "edit-fac-landfill-end", "label": "埋立終了年月日", "type": "date_picker", "required": false }
+          ]
+        },
+        "processing": {
+          "condition": "施設種別 === 中間処理施設",
+          "fields": [
+            { "id": "edit-fac-method", "label": "処理方法", "type": "select", "required": false, "source": "マスター_処理方法" },
+            { "id": "edit-fac-setup-form", "label": "設置形態", "type": "select", "required": false, "source": "マスター_設置形態区分" },
+            { "id": "edit-fac-permit-target", "label": "許可対象区分", "type": "select", "required": false, "source": "マスター_許可対象区分" }
+          ]
+        }
+      },
+      "storageFields": {
+        "label": "保管施設情報",
+        "layout": "form-row",
+        "fields": [
+          { "id": "edit-fac-storage-area", "label": "保管面積(㎡)", "type": "number", "required": false },
+          { "id": "edit-fac-storage-cap", "label": "保管量上限(㎥)", "type": "number", "required": false },
+          { "id": "edit-fac-storage-height", "label": "保管高さ(m)", "type": "number", "required": false }
+        ]
+      },
+      "inlineSection": {
+        "id": "facility-processing-capacity-inline",
+        "label": "処理能力",
+        "content": "loadFacilityCapacityForEdit()"
+      }
+    },
+
+    "capacity": {
+      "location": "モーダルダイアログ",
+      "title": "処理能力",
+      "fields": [
+        { "id": "capItemSelect", "label": "品目", "type": "select", "required": true, "source": "マスター_品目", "readonlyOnEdit": true },
+        { "id": "capHourUnit", "label": "単位", "type": "select", "required": true, "source": "マスター_時間処理能力単位" },
+        { "id": "capHourCap", "label": "時間処理能力", "type": "number", "required": "either_hour_or_day" },
+        { "id": "capDayCap", "label": "日処理能力", "type": "number", "required": "either_hour_or_day" },
+        { "id": "capHours", "label": "稼働時間", "type": "number", "required": false, "min": 0, "max": 24 },
+        { "id": "capNote", "label": "特記事項", "type": "textarea", "required": false }
+      ]
+    },
+
+    "vehicle": {
+      "location": "tab-vehicles内（インラインパネル）",
+      "title": "車両",
+      "layout": "inline_panel",
+      "fields": [
+        { "id": "vReg1", "label": "登録番号1（地名）", "type": "text", "required": true, "maxlength": 4, "example": "品川" },
+        { "id": "vReg2", "label": "登録番号2（分類番号）", "type": "text", "required": true, "maxlength": 3, "example": "500" },
+        { "id": "vReg3", "label": "登録番号3（ひらがな）", "type": "text", "required": true, "maxlength": 1, "example": "あ" },
+        { "id": "vReg4", "label": "登録番号4（一連指定番号）", "type": "text", "required": true, "maxlength": 4, "example": "1234" },
+        { "id": "vNormalFlag", "label": "普通フラグ", "type": "checkbox", "required": false },
+        { "id": "vSpecialFlag", "label": "特管フラグ", "type": "checkbox", "required": false }
+      ]
+    },
+
+    "officer": {
+      "location": "tab-officers内（インラインパネル）",
+      "title": "役員",
+      "layout": "inline_panel",
+      "maxWidth": "400px",
+      "fields": [
+        { "id": "offPosition", "label": "役職名", "type": "select", "required": true, "source": "OFFICER_POSITIONS定数" },
+        { "id": "offLastName", "label": "姓", "type": "text", "required": true },
+        { "id": "offFirstName", "label": "名", "type": "text", "required": true }
+      ]
+    }
+  },
+
+  "detail_views": {
+    "permit_detail": {
+      "location": "tab-permits内（インライン）",
+      "breadcrumb": ["業一覧", "許可詳細"],
+      "sections": [
+        {
+          "id": "header",
+          "type": "b2_header",
+          "display": [
+            { "label": "タイトル", "value": "許可区分名" },
+            { "label": "サブタイトル", "value": "許可番号" },
+            { "label": "ステータスピル", "logic": "取消>廃止>期限切れ>期限間近>有効" },
+            { "label": "優良ピル", "condition": "優良認定 === true" }
+          ]
+        },
+        {
+          "id": "basic_info",
+          "type": "b2_group",
+          "label": "基本情報",
+          "display": [
+            { "label": "許可区分" },
+            { "label": "許可番号" },
+            { "label": "許可年月日" },
+            { "label": "許可有効年月日" },
+            { "label": "優良認定" }
+          ]
+        },
+        {
+          "id": "items",
+          "type": "b2_group",
+          "label": "取扱品目",
+          "content": "品目バッジ一覧",
+          "clickAction": "showPermitItemsView(permitId, businessId, 'detail')"
+        },
+        {
+          "id": "renewal_actions",
+          "type": "action_card_group",
+          "layout": "card",
+          "condition": "!isCancelled && !isAbolished",
+          "buttons": [
+            { "label": "更新", "icon": "↻", "color": "blue", "action": "showPermitRenewalForm(logicalId, businessId)", "disabledWhen": null },
+            { "label": "変更", "icon": "✎", "color": "amber", "action": "showPermitChangeForm(logicalId, businessId)", "disabledWhen": "isExpired" },
+            { "label": "失効新規", "icon": "＋", "color": "orange", "action": "showPermitExpiredNewForm(logicalId, businessId)", "disabledWhen": "!isExpired" }
+          ]
+        },
+        {
+          "id": "status_cancelled",
+          "type": "b2_group",
+          "label": "ステータス",
+          "condition": "isCancelled",
+          "display": [
+            { "label": "状態", "value": "取消（赤ピル）" },
+            { "label": "取消日" },
+            { "label": "取消理由", "condition": "取消理由が空でない" }
+          ],
+          "buttons": [
+            { "label": "復活する", "action": "restorePermitFromDetail()" }
+          ]
+        },
+        {
+          "id": "status_abolished",
+          "type": "b2_group",
+          "label": "ステータス",
+          "condition": "isAbolished",
+          "display": [
+            { "label": "状態", "value": "廃止（灰ピル）" },
+            { "label": "廃止日" },
+            { "label": "廃止理由", "condition": "廃止理由が空でない" }
+          ],
+          "buttons": [
+            { "label": "復活する", "action": "restorePermitFromDetail()" }
+          ]
+        },
+        {
+          "id": "state_change",
+          "type": "b2_group",
+          "label": "状態変更",
+          "condition": "!isCancelled && !isAbolished",
+          "subsections": [
+            {
+              "label": "この許可を廃止する",
+              "fields": [
+                { "id": "detail-abolish-date", "label": "廃止日", "type": "date_picker" },
+                { "id": "detail-abolish-reason", "label": "廃止理由", "type": "text" }
+              ],
+              "buttons": [
+                { "label": "廃止", "action": "abolishPermitFromDetail()", "style": "warning" }
+              ]
+            },
+            {
+              "label": "この許可を取消する",
+              "style": "danger",
+              "fields": [
+                { "id": "detail-cancel-date", "label": "取消日", "type": "date_picker" },
+                { "id": "detail-cancel-reason", "label": "取消理由", "type": "text" }
+              ],
+              "buttons": [
+                { "label": "取消", "action": "cancelPermitFromDetail()", "style": "danger" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "history",
+          "type": "vtl_timeline",
+          "label": "履歴",
+          "content": "loadPermitHistoryVtl(logicalId, businessId)",
+          "nodeActions": [
+            { "label": "修正", "action": "showPermitEditForm(permitId, logicalId, businessId, 'edit')" },
+            { "label": "削除", "action": "deletePermitVersion(permitId, logicalId, businessId)" }
+          ]
+        }
+      ]
+    },
+
+    "facility_detail": {
+      "location": "tab-facilities内（インライン）",
+      "breadcrumb": ["施設一覧", "施設詳細"],
+      "sections": [
+        {
+          "id": "header",
+          "type": "b2_header",
+          "display": [
+            { "label": "タイトル", "value": "施設種別名 + 処理方法名" },
+            { "label": "サブタイトル", "value": "設置場所" },
+            { "label": "ステータスピル", "logic": "取消>廃止>休止>失効>有効" },
+            { "label": "種別ピル", "logic": "中間処理:設置形態名 / 最終処分場:管理区分名" }
+          ]
+        },
+        {
+          "id": "basic_info",
+          "type": "b2_group",
+          "label": "基本情報",
+          "display": [
+            { "label": "許可番号" },
+            { "label": "許可年月日" },
+            { "label": "設置年月日" },
+            { "label": "許可対象区分", "condition": "中間処理施設のみ" }
+          ]
+        },
+        {
+          "id": "landfill_info",
+          "type": "b2_group",
+          "label": "処分場情報",
+          "condition": "施設種別 === 最終処分場",
+          "display": [
+            { "label": "容量", "unit": "㎥" },
+            { "label": "面積", "unit": "㎡" },
+            { "label": "埋立終了日" }
+          ]
+        },
+        {
+          "id": "storage_info",
+          "type": "b2_group",
+          "label": "保管施設情報",
+          "condition": "保管データが存在する場合",
+          "display": [
+            { "label": "保管面積", "unit": "㎡" },
+            { "label": "保管量上限", "unit": "㎥" },
+            { "label": "保管高さ", "unit": "m" }
+          ]
+        },
+        {
+          "id": "capacity",
+          "type": "b2_group",
+          "label": "品目 / 処理能力",
+          "content": "loadFacilityCapacityB2(facilityId)"
+        },
+        {
+          "id": "change_actions",
+          "type": "action_group",
+          "condition": "isActive",
+          "buttons": [
+            { "label": "施設情報を変更（新版作成）", "action": "showFacilityRenewalForm(logicalId, businessId)" }
+          ]
+        },
+        {
+          "id": "suspend_resume",
+          "type": "b2_group",
+          "label": "休止・再開",
+          "condition": "isSuspended || resumeDate",
+          "display": [
+            { "label": "再開日", "condition": "resumeDate" },
+            { "label": "休止期間", "condition": "resumeDate" },
+            { "label": "状態（休止アンバーピル）", "condition": "isSuspended" },
+            { "label": "休止日", "condition": "isSuspended" }
+          ]
+        },
+        {
+          "id": "status_abolished",
+          "type": "b2_group",
+          "label": "ステータス",
+          "condition": "isAbolished",
+          "display": [
+            { "label": "状態", "value": "廃止（灰ピル）" },
+            { "label": "廃止日" },
+            { "label": "廃止確認日", "condition": "廃止確認日が空でない" }
+          ],
+          "buttons": [
+            { "label": "復活する", "action": "restoreFacilityFromDetail()" }
+          ]
+        },
+        {
+          "id": "status_cancelled",
+          "type": "b2_group",
+          "label": "ステータス",
+          "condition": "isCancelled",
+          "display": [
+            { "label": "状態", "value": "取消（赤ピル）" },
+            { "label": "取消日" },
+            { "label": "取消理由", "condition": "取消理由が空でない" }
+          ],
+          "buttons": [
+            { "label": "復活する", "action": "restoreFacilityFromDetail()" }
+          ]
+        },
+        {
+          "id": "state_change",
+          "type": "b2_group",
+          "label": "状態変更",
+          "condition": "isActive",
+          "subsections": [
+            {
+              "label": "この施設を休止する",
+              "layout": "compact_horizontal",
+              "style": "warning",
+              "fields": [
+                { "id": "detail-fac-suspend-date", "label": "休止日", "type": "date_picker" },
+                { "id": "detail-fac-suspend-reason", "label": "休止理由", "type": "text" }
+              ],
+              "buttons": [
+                { "label": "休止", "action": "suspendFacilityFromDetail()", "style": "warning" }
+              ]
+            },
+            {
+              "label": "この施設を廃止する",
+              "layout": "compact_horizontal",
+              "fields": [
+                { "id": "detail-fac-abolish-date", "label": "廃止日", "type": "date_picker" },
+                { "id": "detail-fac-abolish-confirm", "label": "廃止確認日", "type": "date_picker",
+                  "condition": "施設種別 === 最終処分場", "note": "知事確認日（法9条5項）" },
+                { "id": "detail-fac-abolish-reason", "label": "廃止理由", "type": "text" }
+              ],
+              "buttons": [
+                { "label": "廃止", "action": "abolishFacilityFromDetail()", "style": "warning" }
+              ]
+            },
+            {
+              "label": "この施設の許可を取消する",
+              "style": "danger",
+              "fields": [
+                { "id": "detail-fac-cancel-date", "label": "取消日", "type": "date_picker" },
+                { "id": "detail-fac-cancel-reason", "label": "取消理由", "type": "text", "note": "行政処分理由（法15条の3）" }
+              ],
+              "buttons": [
+                { "label": "取消", "action": "cancelFacilityFromDetail()", "style": "danger" }
+              ]
+            },
+            {
+              "label": "この施設を削除する",
+              "style": "destructive",
+              "note": "処理能力データと全ての履歴も削除されます",
+              "buttons": [
+                { "label": "削除", "action": "deleteFacilityFromDetail()", "confirm": "二段階確認" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "state_change_suspended",
+          "type": "b2_group",
+          "label": "状態変更",
+          "condition": "isSuspended",
+          "buttons": [
+            { "label": "再開する", "action": "resumeFacilityFromDetail()", "style": "success" }
+          ]
+        },
+        {
+          "id": "history",
+          "type": "vtl_timeline",
+          "label": "履歴",
+          "content": "loadFacilityHistoryVtl(logicalId, businessId)",
+          "nodeActions": [
+            { "label": "修正", "action": "showFacilityEditForm(facilityId, logicalId, businessId, 'edit')" },
+            { "label": "削除", "action": "deleteFacilityVersion(facilityId, logicalId, businessId)" }
+          ]
+        }
+      ]
+    }
+  },
+
+  "navigation": {
+    "flows": [
+      { "from": "home", "to": "search_permit", "trigger": "業検索ボタン" },
+      { "from": "home", "to": "search_facility", "trigger": "施設検索ボタン" },
+      { "from": "home", "to": "search_vehicle", "trigger": "車両検索ボタン" },
+      { "from": "home", "to": "search_officer", "trigger": "役員検索ボタン" },
+      { "from": "home", "to": "business_list", "trigger": "事業者一覧ボタン" },
+      { "from": "home", "to": "business_form(new)", "trigger": "事業者登録ボタン" },
+      { "from": "home", "to": "settings", "trigger": "設定ボタン" },
+      { "from": "search_*", "to": "business_detail", "trigger": "検索結果クリック" },
+      { "from": "business_detail", "to": "business_form(edit)", "trigger": "編集ボタン" },
+      { "from": "business_detail.tab-permits", "to": "permit_add", "trigger": "業追加ボタン" },
+      { "from": "business_detail.tab-permits", "to": "permit_detail", "trigger": "許可カードクリック" },
+      { "from": "permit_detail", "to": "permit_edit(renewal)", "trigger": "更新カードボタン" },
+      { "from": "permit_detail", "to": "permit_edit(change)", "trigger": "変更カードボタン" },
+      { "from": "permit_detail", "to": "permit_edit(expiredNew)", "trigger": "失効新規カードボタン" },
+      { "from": "permit_detail", "to": "permit_edit(edit)", "trigger": "履歴の修正ボタン" },
+      { "from": "permit_detail", "to": "permit_items_view", "trigger": "品目クリック" },
+      { "from": "business_detail.tab-facilities", "to": "facility_add", "trigger": "施設追加ボタン" },
+      { "from": "business_detail.tab-facilities", "to": "facility_detail", "trigger": "施設カードクリック" },
+      { "from": "facility_detail", "to": "facility_edit(renewal)", "trigger": "変更ボタン" },
+      { "from": "facility_detail", "to": "facility_edit(edit)", "trigger": "履歴の修正ボタン" },
+      { "from": "settings", "to": "master_list", "trigger": "マスターボタン" },
+      { "from": "master_list", "to": "master_form", "trigger": "新規追加/編集" }
+    ]
+  }
+}

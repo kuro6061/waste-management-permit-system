@@ -1,0 +1,6 @@
+{
+  "rootDir": "../..",
+  "testMatch": ["<rootDir>/tests/js/**/*.test.js"],
+  "testPathIgnorePatterns": [],
+  "testEnvironment": "node"
+}

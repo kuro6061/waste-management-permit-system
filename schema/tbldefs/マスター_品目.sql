@@ -1,0 +1,5 @@
+﻿CREATE TABLE [マスター_品目] (
+  [品目ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [品目名] VARCHAR (100),
+  [表示順] LONG
+)

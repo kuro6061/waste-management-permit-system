@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_設置形態区分] (
+  [設置形態区分ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [設置形態区分名] VARCHAR (255)
+)

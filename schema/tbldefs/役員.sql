@@ -1,0 +1,8 @@
+﻿CREATE TABLE [役員] (
+  [役員ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [事業者ID] LONG,
+  [役職名] VARCHAR (30),
+  [姓] VARCHAR (30),
+  [名] VARCHAR (30),
+  [退任フラグ] BIT
+)

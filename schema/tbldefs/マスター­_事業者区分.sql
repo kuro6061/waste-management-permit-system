@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター­_事業者区分] (
+  [事業者区分ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [事業者区分名] VARCHAR (255)
+)

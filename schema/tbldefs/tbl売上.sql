@@ -1,0 +1,6 @@
+﻿CREATE TABLE [tbl売上] (
+  [ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [商品名] VARCHAR (255),
+  [売上年月] DATETIME,
+  [売上額] LONG
+)

@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_日処理能力単位] (
+  [日処理能力単位ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [日処理能力単位名] VARCHAR (20)
+)

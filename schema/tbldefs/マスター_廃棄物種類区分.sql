@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_廃棄物種類区分] (
+  [廃棄物種類区分ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [廃棄物種類名] VARCHAR (255)
+)

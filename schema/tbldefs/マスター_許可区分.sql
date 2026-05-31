@@ -1,0 +1,5 @@
+﻿CREATE TABLE [マスター_許可区分] (
+  [許可区分ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [許可区分名] VARCHAR (50),
+  [廃棄物種類区分ID] LONG
+)

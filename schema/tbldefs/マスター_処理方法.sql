@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_処理方法] (
+  [処理方法ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [処理方法名] VARCHAR (50)
+)

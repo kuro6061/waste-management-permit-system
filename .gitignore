@@ -1,0 +1,46 @@
+# VCSBackup files
+*_VCSBackup*.accdb
+
+# Sensitive/local data (never publish)
+app.hta
+*.accdb
+*.mdb
+*.ldb
+*.laccdb
+*.xlsx
+*.xls
+*.docx
+*.zip
+*.7z
+bridge/
+data/
+tmp/
+docs/reviews/
+.mcp.json
+.claude/
+.codex/
+
+# Debug/log files
+debug.log
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Temporary files
+nul
+errors*.txt
+scripts/_temp_check.js
+test-results/
+.pytest_cache/
+
+# Backup files
+*.bak
+
+# Distribution
+dist/

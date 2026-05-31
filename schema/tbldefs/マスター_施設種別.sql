@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_施設種別] (
+  [施設種別ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [施設種別名] VARCHAR (50)
+)

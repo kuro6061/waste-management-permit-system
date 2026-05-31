@@ -1,0 +1,17 @@
+{
+  "name": "waste-management-permit-system",
+  "private": true,
+  "scripts": {
+    "test": "jest --verbose --config tests/js/jest.config.json",
+    "test:watch": "jest --watch --config tests/js/jest.config.json",
+    "test:db": "python -m pytest tests/ -v",
+    "test:all": "npm test && npm run test:db",
+    "check:hta": "python scripts/check_hta.py",
+    "convert:hta": "python scripts/convert_hta.py",
+    "watch": "chokidar \"app_logic.js\" \"tests/js/**/*.test.js\" -c \"npx jest --verbose --config tests/js/jest.config.json\" --initial"
+  },
+  "devDependencies": {
+    "chokidar-cli": "^3.0.0",
+    "jest": "^29.0.0"
+  }
+}

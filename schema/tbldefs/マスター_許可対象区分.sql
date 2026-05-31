@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_許可対象区分] (
+  [許可対象区分ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [許可対象区分名] VARCHAR (20)
+)

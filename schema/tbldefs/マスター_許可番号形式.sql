@@ -1,0 +1,5 @@
+﻿CREATE TABLE [マスター_許可番号形式] (
+  [許可番号形式ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [許可番号形式名] VARCHAR (20),
+  [説明] VARCHAR (255)
+)

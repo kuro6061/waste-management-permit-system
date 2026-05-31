@@ -1,0 +1,462 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>レイアウトレビュー - R8.3.6 指摘事項対応案（修正版）</title>
+    <HTA:APPLICATION
+        ID="LayoutReview"
+        APPLICATIONNAME="レイアウトレビュー"
+        BORDER="thick"
+        BORDERSTYLE="normal"
+        CAPTION="yes"
+        MAXIMIZEBUTTON="yes"
+        MINIMIZEBUTTON="yes"
+        SINGLEINSTANCE="yes"
+        SYSMENU="yes"
+        WINDOWSTATE="maximize"
+    >
+    <style>
+        /* ===== app_source.htaから必要なCSSをコピー ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', 'Yu Gothic UI', 'Meiryo UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(160deg, #0a1930 0%, #1a3558 40%, #1e4070 70%, #142a50 100%);
+            min-height: 100vh;
+            color: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { padding: 20px 40px; max-width: 960px; margin: 0 auto; }
+        h1 { font-size: 1.8em; font-weight: 200; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .subtitle { font-size: 0.8em; opacity: 0.5; letter-spacing: 0.08em; font-weight: 400; text-transform: uppercase; }
+
+        /* タブナビゲーション */
+        .review-tabs { display: flex; flex-wrap: wrap; margin-bottom: 24px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 2px; }
+        .review-tabs > * + * { margin-left: 2px; }
+        .review-tab { padding: 8px 14px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-size: 0.8em; font-weight: 500; color: rgba(255,255,255,0.6); }
+        .review-tab.active { background: rgba(255,255,255,0.15); color: #fff; }
+        .review-tab:hover { color: #fff; }
+
+        /* レビューセクション */
+        .review-section { display: none; }
+        .review-section.active { display: block; }
+
+        /* 案タブ */
+        .plan-tabs { display: flex; margin-bottom: 16px; }
+        .plan-tabs > * + * { margin-left: 8px; }
+        .plan-tab { padding: 6px 16px; border: 1px solid rgba(255,255,255,0.2); background: transparent; cursor: pointer; border-radius: 8px; font-size: 0.85em; color: rgba(255,255,255,0.7); }
+        .plan-tab.active { background: #007aff; border-color: #007aff; color: #fff; }
+        .plan-content { display: none; }
+        .plan-content.active { display: block; }
+
+        .issue-desc { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; margin-bottom: 16px; font-size: 0.9em; line-height: 1.6; }
+        .issue-desc strong { color: #ff9500; }
+
+        /* ===== B2デザインシステム（app_source.htaから） ===== */
+        .b2-header { padding: 16px; }
+        .b2-title { font-size: 1.2em; font-weight: 600; color: #1d1d1f; }
+        .b2-location { font-size: 0.85em; color: #86868b; margin-top: 2px; }
+        .b2-badges { margin-top: 8px; }
+        .b2-pill { display: inline-block; font-size: 0.75em; font-weight: 500; padding: 3px 10px; border-radius: 12px; }
+        .b2-pill-red { background: #ffe5e5; color: #ff3b30; }
+        .b2-pill-gray { background: #f0f0f0; color: #86868b; }
+        .b2-pill-amber { background: #fff8e1; color: #ff9500; }
+        .b2-pill-green { background: #e8f8ec; color: #34c759; }
+        .b2-pill-blue { background: #e8f0ff; color: #007aff; }
+        .b2-pill-orange { background: #fff3e0; color: #ff9500; }
+
+        .b2-group-title { font-size: 0.8em; font-weight: 500; color: #86868b; padding: 24px 16px 8px 16px; text-transform: uppercase; letter-spacing: 0.03em; }
+        .b2-group { background: rgba(255,255,255,0.95); border-radius: 14px; overflow: hidden; color: #333; }
+        .b2-row { display: flex; align-items: center; padding: 11px 16px; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9em; }
+        .b2-row:last-child { border-bottom: none; }
+        .b2-row-label { color: #86868b; flex: 0 0 120px; }
+        .b2-row-value { flex: 1; color: #1d1d1f; }
+
+        .b2-action-row { display: block; padding: 13px 16px; text-align: center; font-size: 0.95em; font-weight: 500; color: #007aff; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .b2-action-row:last-child { border-bottom: none; }
+        .b2-action-row:hover { background: rgba(0,122,255,0.04); }
+
+        .b2-abolish-row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .b2-abolish-row:last-child { border-bottom: none; }
+        .b2-abolish-label { font-size: 0.9em; font-weight: 400; color: #ff3b30; flex: 0 0 auto; }
+        .b2-abolish-input { margin-left: auto; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-size: 0.85em; color: #1d1d1f; background: rgba(0,0,0,0.03); width: 140px; text-align: center; }
+        .b2-abolish-btn { margin-left: 8px; padding: 6px 14px; border-radius: 8px; border: none; background: #ff3b30; color: #fff; font-size: 0.85em; font-weight: 500; cursor: pointer; }
+
+        .b2-restore-row { display: block; padding: 13px 16px; text-align: center; font-size: 0.95em; font-weight: 500; color: #34c759; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.06); }
+
+        /* ===== 品目バッジ ===== */
+        .item-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 2px 5px 2px 0; }
+        .item-badge.transfer { background: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; }
+        .item-badge.handling { background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; }
+        .item-badge.none { background: #f5f5f5; border: 1px solid #e0e0e0; color: #999; }
+
+        /* ===== 品目編集テーブル ===== */
+        .item-edit-th { padding: 3px 5px; font-size: 11px; text-align: center; border: 1px solid #ddd; writing-mode: vertical-rl; height: 60px; background: #f0f0f0; }
+        .item-edit-td { text-align: center; padding: 5px 3px; border: 1px solid #ddd; cursor: pointer; }
+        .mark-transfer { color: #1565c0; }
+        .mark-handling { color: #2e7d32; }
+        .mark-none { color: #bdbdbd; }
+
+        /* ===== タイムライン ===== */
+        .timeline-section { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 15px 20px; margin-bottom: 15px; color: #333; }
+        .timeline-section h4 { color: #2d5a87; margin: 0 0 12px 0; font-size: 14px; }
+        .timeline-bar-area { position: relative; height: 48px; background: #e8eef4; border-radius: 4px; margin-top: 28px; margin-bottom: 4px; }
+        .timeline-bar {
+            position: absolute; top: 4px; height: 40px; border-radius: 3px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; color: #fff; font-weight: bold; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; min-width: 2px;
+        }
+        .timeline-bar.active { background: #4CAF50; }
+        .timeline-bar.expired { background: #90CAF9; color: #1a3a5c; }
+        .timeline-bar.cancelled { background: #ef5350; }
+        .timeline-bar.abolished { background: #9e9e9e; }
+        .timeline-dates { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-bottom: 10px; }
+
+        /* ===== フォーム ===== */
+        .form-card { background: rgba(255,255,255,0.95); border-radius: 14px; padding: 25px; color: #333; text-align: left; max-width: 700px; margin: 0 auto; }
+        .form-card h2 { color: #1d1d1f; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); font-weight: 600; font-size: 1.2em; }
+
+        /* ===== レビュー固有 ===== */
+        .demo-box { max-width: 700px; margin: 0 auto 24px auto; }
+        .compare-label { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.75em; font-weight: 600; margin-bottom: 8px; }
+        .compare-proposed { background: rgba(52,199,89,0.2); color: #34c759; }
+        .auto-label { font-size: 11px; color: #888; }
+    </style>
+    <script>
+        function switchTab(tabId) {
+            var tabs = document.getElementsByClassName('review-tab');
+            var sections = document.getElementsByClassName('review-section');
+            for (var i = 0; i < tabs.length; i++) tabs[i].className = 'review-tab';
+            for (var i = 0; i < sections.length; i++) sections[i].className = 'review-section';
+            document.getElementById('tab-' + tabId).className = 'review-tab active';
+            document.getElementById('section-' + tabId).className = 'review-section active';
+        }
+        function switchPlan(sectionId, planId) {
+            var container = document.getElementById('section-' + sectionId);
+            var tabs = container.getElementsByClassName('plan-tab');
+            var contents = container.getElementsByClassName('plan-content');
+            for (var i = 0; i < tabs.length; i++) tabs[i].className = 'plan-tab';
+            for (var i = 0; i < contents.length; i++) contents[i].className = 'plan-content';
+            document.getElementById(sectionId + '-plan-tab-' + planId).className = 'plan-tab active';
+            document.getElementById(sectionId + '-plan-' + planId).className = 'plan-content active';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>R8.3.6 指摘事項 レイアウトレビュー（修正版）</h1>
+        <p class="subtitle" style="margin-bottom: 24px;">フィードバック反映済み - 各セクションで選択されたデザインを表示</p>
+
+        <div class="review-tabs">
+            <button class="review-tab active" id="tab-a1" onclick="switchTab('a1')">A1: 更新/変更ボタン</button>
+            <button class="review-tab" id="tab-a2" onclick="switchTab('a2')">A2: 品目表示統一</button>
+            <button class="review-tab" id="tab-a3" onclick="switchTab('a3')">A3: 廃止/取消理由配置</button>
+            <button class="review-tab" id="tab-a4" onclick="switchTab('a4')">A4: タイムライン改善</button>
+            <button class="review-tab" id="tab-a5" onclick="switchTab('a5')">A5: 失効時の操作</button>
+        </div>
+
+        <!-- ===== A1: 更新・変更ボタン - 案C(カード型) + 案A(配色) マージ ===== -->
+        <div class="review-section active" id="section-a1">
+            <div class="issue-desc">
+                <strong>指摘:</strong> 業の詳細画面から、更新・変更の動作ボタンがわかりにくくなった。<br>
+                <strong>採用:</strong> 案C（カード型レイアウト）+ 案A（配色: 更新=青、変更=オレンジ）のマージ
+            </div>
+
+            <div class="demo-box">
+                <span class="compare-label compare-proposed">採用: カード型 + 案A配色</span>
+                <div class="b2-group-title">取扱品目</div>
+                <div class="b2-group" style="padding:12px 16px;">
+                    <span class="item-badge handling">燃え殻 〇</span>
+                    <span class="item-badge transfer">汚泥 ◎</span>
+                    <span class="item-badge none">廃油 ×</span>
+                    <span class="item-badge handling">廃酸 〇</span>
+                    <span class="item-badge none">廃アルカリ ×</span>
+                </div>
+                <div style="margin-top:16px; display:flex;">
+                    <div style="flex:1; padding:16px; background:#007aff; border-radius:14px; text-align:center; cursor:pointer;">
+                        <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x21BB;</div>
+                        <div style="font-size:0.9em; font-weight:600; color:#fff;">更新</div>
+                        <div style="font-size:0.7em; color:rgba(255,255,255,0.7); margin-top:2px;">有効期限を延長</div>
+                    </div>
+                    <div style="flex:1; padding:16px; background:#ff9500; border-radius:14px; text-align:center; cursor:pointer; margin-left:8px;">
+                        <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x270E;</div>
+                        <div style="font-size:0.9em; font-weight:600; color:#fff;">変更（法14条の2）</div>
+                        <div style="font-size:0.7em; color:rgba(255,255,255,0.7); margin-top:2px;">品目の追加・変更</div>
+                    </div>
+                </div>
+                <p class="auto-label" style="margin-top:8px;">案Cのカード型レイアウト（イラスト+説明文）に案Aの配色（更新=青、変更=オレンジ）を適用。背景色を塗りつぶして視認性を向上。</p>
+            </div>
+        </div>
+
+        <!-- ===== A2: 品目表示 - 案B(横書きヘッダ)採用 ===== -->
+        <div class="review-section" id="section-a2">
+            <div class="issue-desc">
+                <strong>指摘:</strong> 業の編集画面で、取扱い品目表示が2行だったり1行だったりで統一感がない。<br>
+                <strong>要望:</strong> 品目の追加に備え、枠を2段にする。○×に関係なくサイズを固定。文字は上に揃える。<br>
+                <strong>採用:</strong> 案B（横書きヘッダ）。IE互換性が安定。10列x2段固定。品目追加時は段を増やして対応。
+            </div>
+
+            <div class="demo-box">
+                <div class="demo-box">
+                    <span class="compare-label compare-proposed">案B: 2段固定 + 横書きヘッダ（セル拡大）</span>
+                    <div class="form-card">
+                        <h2>取扱品目</h2>
+                        <table style="border-collapse:collapse; width:100%; table-layout:fixed;">
+                            <tr>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">燃え殻</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">汚泥</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">廃油</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">廃酸</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">廃ｱﾙｶﾘ</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">廃ﾌﾟﾗ</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">紙くず</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">木くず</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">繊維くず</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">動植物<br>残さ</th>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-handling">〇</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-transfer">◎</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-handling">〇</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-handling">〇</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                            </tr>
+                        </table>
+                        <table style="border-collapse:collapse; width:100%; table-layout:fixed; margin-top:-1px;">
+                            <tr>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">ゴムくず</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">金属くず</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">ｶﾞﾗｽ<br>陶磁器</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">鉱さい</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">がれき類</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">ばいじん</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">13号</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">動物<br>ふん尿</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid #ddd; background:#f0f0f0; vertical-align:top;">動物死体</th>
+                                <th style="padding:6px 4px; font-size:0.75em; text-align:center; border:1px solid transparent; background:transparent;"></th>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-handling">〇</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-handling">〇</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="text-align:center; padding:8px 4px; border:1px solid #ddd; cursor:pointer; font-size:1.3em;"><span class="mark-none">×</span></td>
+                                <td style="border:1px solid transparent;"></td>
+                            </tr>
+                        </table>
+                        <p class="auto-label" style="margin-top:5px;">〇=取扱 ◎=積替保管 ×=なし（クリックで切替）</p>
+                        <p class="auto-label"><strong>拡張性:</strong> 横書きヘッダでIE互換性安定。品目追加時は段を増やして対応。セル高さ拡大でクリックしやすい。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== A3: 廃止/取消理由配置 - 案A採用 + 施設の休止理由あり ===== -->
+        <div class="review-section" id="section-a3">
+            <div class="issue-desc">
+                <strong>指摘:</strong> 廃止と取消の理由欄が日付から離れていてわかりにくい。日付入力欄の下にすべき。<br>
+                <strong>採用:</strong> 案A（日付と理由を横並びコンパクト配置）。施設にも廃止理由欄・休止理由欄を追加。
+            </div>
+
+            <div class="demo-box">
+                <span class="compare-label compare-proposed">採用: 業 - 日付と理由を横並び</span>
+                <div class="b2-group-title" style="color:#86868b;">状態変更（業）</div>
+                <div class="b2-group">
+                    <div style="padding:12px 16px; border-bottom:1px solid rgba(0,0,0,0.06);">
+                        <div style="font-size:0.9em; font-weight:500; color:#ff3b30; margin-bottom:8px;">この許可を廃止する</div>
+                        <div style="display:flex; align-items:flex-start;">
+                            <div style="margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">廃止日</div>
+                                <input type="text" style="width:130px; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em; text-align:center;" placeholder="日付を選択" readonly>
+                            </div>
+                            <div style="flex:1; margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">廃止理由</div>
+                                <input type="text" style="width:100%; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em;" placeholder="理由を入力">
+                            </div>
+                            <div style="padding-top:16px;">
+                                <button class="b2-abolish-btn" style="margin-left:0;">廃止</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:12px 16px;">
+                        <div style="font-size:0.9em; font-weight:500; color:#c62828; margin-bottom:8px;">この許可を取消する</div>
+                        <div style="display:flex; align-items:flex-start;">
+                            <div style="margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">取消日</div>
+                                <input type="text" style="width:130px; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em; text-align:center;" placeholder="日付を選択" readonly>
+                            </div>
+                            <div style="flex:1; margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">取消理由</div>
+                                <input type="text" style="width:100%; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em;" placeholder="理由を入力">
+                            </div>
+                            <div style="padding-top:16px;">
+                                <button class="b2-abolish-btn" style="margin-left:0; background:#c62828;">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-box">
+                <span class="compare-label compare-proposed">採用: 施設 - 休止理由欄・廃止理由欄を追加</span>
+                <div class="b2-group-title" style="color:#86868b;">状態変更（施設）</div>
+                <div class="b2-group">
+                    <div style="padding:12px 16px; border-bottom:1px solid rgba(0,0,0,0.06);">
+                        <div style="font-size:0.9em; font-weight:500; color:#e65100; margin-bottom:8px;">この施設を休止する</div>
+                        <div style="display:flex; align-items:flex-start;">
+                            <div style="margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">休止日</div>
+                                <input type="text" style="width:130px; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em; text-align:center;" placeholder="日付を選択" readonly>
+                            </div>
+                            <div style="flex:1; margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">休止理由 <span style="color:#ff9500; font-size:0.9em;">NEW</span></div>
+                                <input type="text" style="width:100%; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em;" placeholder="理由を入力">
+                            </div>
+                            <div style="padding-top:16px;">
+                                <button class="b2-abolish-btn" style="margin-left:0; background:#e65100;">休止</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:12px 16px; border-bottom:1px solid rgba(0,0,0,0.06);">
+                        <div style="font-size:0.9em; font-weight:500; color:#ff3b30; margin-bottom:8px;">この施設を廃止する</div>
+                        <div style="display:flex; align-items:flex-start;">
+                            <div style="margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">廃止日</div>
+                                <input type="text" style="width:130px; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em; text-align:center;" placeholder="日付を選択" readonly>
+                            </div>
+                            <div style="flex:1; margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">廃止理由 <span style="color:#ff9500; font-size:0.9em;">NEW</span></div>
+                                <input type="text" style="width:100%; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em;" placeholder="理由を入力">
+                            </div>
+                            <div style="padding-top:16px;">
+                                <button class="b2-abolish-btn" style="margin-left:0;">廃止</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding:12px 16px;">
+                        <div style="font-size:0.9em; font-weight:500; color:#c62828; margin-bottom:8px;">この施設の許可を取消する</div>
+                        <div style="display:flex; align-items:flex-start;">
+                            <div style="margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">取消日</div>
+                                <input type="text" style="width:130px; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em; text-align:center;" placeholder="日付を選択" readonly>
+                            </div>
+                            <div style="flex:1; margin-right:16px;">
+                                <div style="font-size:0.75em; color:#86868b; margin-bottom:2px;">取消理由</div>
+                                <input type="text" style="width:100%; padding:6px 10px; border:1px solid rgba(0,0,0,0.1); border-radius:8px; font-size:0.85em;" placeholder="理由を入力">
+                            </div>
+                            <div style="padding-top:16px;">
+                                <button class="b2-abolish-btn" style="margin-left:0; background:#c62828;">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="auto-label" style="margin-top:8px;">休止・廃止に理由欄を新設。レイアウトは業と統一。</p>
+                <p class="auto-label" style="color:#ff9500;">※ DB側に施設の休止理由・廃止理由カラム追加が必要</p>
+            </div>
+        </div>
+
+        <!-- ===== A4: タイムライン - 案A採用 + 「現在」マーカー追加 ===== -->
+        <div class="review-section" id="section-a4">
+            <div class="issue-desc">
+                <strong>指摘:</strong> 有効期間タイムラインの許可番号表示がわかりにくい。新規/更新/変更/失効新規のタイミングがわかりたい。<br>
+                <strong>採用:</strong> 案A（イベントマーカー付き）+ 右端に「現在」マーカーを追加
+            </div>
+
+            <div class="demo-box">
+                <span class="compare-label compare-proposed">採用: イベントマーカー + 「現在」マーカー</span>
+                <div class="timeline-section">
+                    <h4>有効期間タイムライン</h4>
+                    <div class="timeline-bar-area" style="position:relative;">
+                        <div class="timeline-bar expired" style="left:0%;width:30%;">
+                            <span style="font-size:10px;">新規</span>
+                        </div>
+                        <div style="position:absolute; top:14px; left:30%; width:3%; text-align:center; font-size:9px; color:#e53935; font-weight:bold;">
+                            空白
+                        </div>
+                        <div class="timeline-bar expired" style="left:33%;width:27%;">
+                            <span style="font-size:10px;">失効新規</span>
+                        </div>
+                        <div class="timeline-bar active" style="left:61%;width:30%;">
+                            <span style="font-size:10px;">更新</span>
+                        </div>
+                        <!-- イベントマーカー -->
+                        <div style="position:absolute; top:-20px; left:0%; font-size:9px; color:#2d5a87; font-weight:bold;">&#x25BC; 新規</div>
+                        <div style="position:absolute; top:-20px; left:33%; font-size:9px; color:#e65100; font-weight:bold;">&#x25BC; 失効新規</div>
+                        <div style="position:absolute; top:-20px; left:61%; font-size:9px; color:#4CAF50; font-weight:bold;">&#x25BC; 更新</div>
+                        <!-- 「現在」マーカー -->
+                        <div style="position:absolute; top:-22px; right:6%; font-size:9px; color:#ff3b30; font-weight:bold; text-align:center;">
+                            現在<br>&#x25BC;
+                        </div>
+                        <div style="position:absolute; top:0; right:8%; width:2px; height:48px; background:#ff3b30; z-index:10;"></div>
+                    </div>
+                    <div class="timeline-dates">
+                        <span>2017/04/01</span>
+                        <span>2030/01/14</span>
+                    </div>
+                </div>
+                <p class="auto-label">バーのラベルを許可番号→イベント種別に変更。空白期間を赤字で強調。上部にイベントマーカー。右端に赤い「現在」マーカーを追加。</p>
+            </div>
+        </div>
+
+        <!-- ===== A5: 失効時の操作 - 案A採用（期限切れ時は更新+失効新規の両方を有効化） ===== -->
+        <div class="review-section" id="section-a5">
+            <div class="issue-desc">
+                <strong>指摘:</strong> 業の編集画面で、失効の場合の入力方法がない。<br>
+                <strong>採用:</strong> 案A（3ボタン）。期限切れ時は「更新」と「失効新規」の両方を有効化（申請が失効前に提出されたケースに対応）
+            </div>
+
+            <div class="demo-box">
+                <span class="compare-label compare-proposed">採用: 3ボタン（状態で有効/無効切替）</span>
+
+                <div style="margin-bottom:16px;">
+                    <div style="font-size:0.85em; color:#86868b; margin-bottom:8px;">有効時:</div>
+                    <div style="display:flex;">
+                        <div style="flex:1; padding:16px; background:#007aff; border-radius:14px; text-align:center; cursor:pointer;">
+                            <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x21BB;</div>
+                            <div style="font-size:0.9em; font-weight:600; color:#fff;">更新</div>
+                        </div>
+                        <div style="flex:1; padding:16px; background:#ff9500; border-radius:14px; text-align:center; cursor:pointer; margin-left:8px;">
+                            <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x270E;</div>
+                            <div style="font-size:0.9em; font-weight:600; color:#fff;">変更</div>
+                        </div>
+                        <div style="flex:1; padding:16px; background:#8e8e93; border-radius:14px; text-align:center; margin-left:8px; opacity:0.4;">
+                            <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x2795;</div>
+                            <div style="font-size:0.9em; font-weight:600; color:#fff;">失効新規</div>
+                        </div>
+                    </div>
+                    <p class="auto-label" style="margin-top:4px;">有効時は「失効新規」をグレーアウト（使用不可）</p>
+                </div>
+
+                <div>
+                    <div style="font-size:0.85em; color:#86868b; margin-bottom:8px;">期限切れ時:</div>
+                    <div style="display:flex;">
+                        <div style="flex:1; padding:16px; background:#007aff; border-radius:14px; text-align:center; cursor:pointer;">
+                            <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x21BB;</div>
+                            <div style="font-size:0.9em; font-weight:600; color:#fff;">更新</div>
+                        </div>
+                        <div style="flex:1; padding:16px; background:#8e8e93; border-radius:14px; text-align:center; margin-left:8px; opacity:0.4;">
+                            <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x270E;</div>
+                            <div style="font-size:0.9em; font-weight:600; color:#fff;">変更</div>
+                        </div>
+                        <div style="flex:1; padding:16px; background:#e65100; border-radius:14px; text-align:center; cursor:pointer; margin-left:8px;">
+                            <div style="font-size:1.5em; color:#fff; margin-bottom:4px;">&#x2795;</div>
+                            <div style="font-size:0.9em; font-weight:600; color:#fff;">失効新規</div>
+                        </div>
+                    </div>
+                    <p class="auto-label" style="margin-top:4px;">期限切れ時は「更新」と「失効新規」の両方を有効化。「変更」をグレーアウト。<br>※ 失効前に更新申請が提出され、失効後に許可が下りるケースに対応。</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

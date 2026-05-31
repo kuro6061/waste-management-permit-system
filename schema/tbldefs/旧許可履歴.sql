@@ -1,0 +1,5 @@
+﻿CREATE TABLE [旧許可履歴] (
+  [履歴ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [許可ID] LONG,
+  [情報更新年月日] DATETIME
+)

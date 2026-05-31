@@ -1,0 +1,203 @@
+<html>
+<head>
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<title>品目表示方式テスト</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Meiryo UI', 'Yu Gothic UI', sans-serif; background: #f5f5f5; padding: 20px; font-size: 14px; }
+  h1 { font-size: 18px; margin-bottom: 20px; color: #333; }
+  .panel { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+  .panel-title { font-size: 15px; font-weight: bold; color: #1a73e8; margin-bottom: 12px; border-bottom: 2px solid #1a73e8; padding-bottom: 6px; }
+  .section-heading { font-size: 13px; font-weight: bold; color: #555; margin-bottom: 8px; }
+  .auto-label { font-size: 11px; color: #888; margin-top: 6px; }
+
+  /* === 現行: 横テーブル === */
+  .current-table { border-collapse: collapse; width: 100%; }
+  .current-table th { padding: 3px 5px; font-size: 11px; text-align: center; border: 1px solid #ddd; writing-mode: vertical-rl; height: 60px; background: #f0f0f0; font-weight: normal; }
+  .current-table td { text-align: center; padding: 5px 3px; border: 1px solid #ddd; }
+
+  /* === A: タグ/チップ方式 === */
+  .tag-container { display: flex; flex-wrap: wrap; gap: 6px; }
+  .item-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 4px; font-size: 13px; }
+  .item-tag.handling { background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; }
+  .item-tag.transfer { background: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; }
+
+  /* === B: 折り返しグリッド === */
+  .grid-container { display: flex; flex-wrap: wrap; gap: 5px; }
+  .grid-chip { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+  .grid-chip.handling { background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; }
+  .grid-chip.transfer { background: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; }
+  .grid-chip.none { background: #f5f5f5; border: 1px solid #e0e0e0; color: #999; }
+
+  /* === C: 2列テーブル === */
+  .vtable { border-collapse: collapse; width: auto; }
+  .vtable th { padding: 5px 12px; font-size: 12px; text-align: left; border: 1px solid #ddd; background: #f0f0f0; font-weight: bold; }
+  .vtable td { padding: 5px 12px; font-size: 13px; border: 1px solid #ddd; }
+  .vtable .mark-cell { text-align: center; }
+
+  /* === D: 縦リスト === */
+  .vlist { list-style: none; padding: 0; }
+  .vlist li { padding: 3px 0; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .vlist li + li { border-top: 1px solid #f0f0f0; padding-top: 5px; }
+
+  /* marks */
+  .mark-handling { color: #1565c0; font-weight: bold; }
+  .mark-transfer { color: #2e7d32; font-weight: bold; }
+  .mark-none { color: #ccc; }
+
+  /* overflow demo */
+  .overflow-box { max-width: 100%; overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<h1>品目表示方式テスト（4案比較）</h1>
+
+<div id="content"></div>
+
+<script>
+// サンプルデータ（品目20個）
+var allItems = [
+  {id:1, name:"燃え殻"}, {id:2, name:"汚泥"}, {id:3, name:"廃油"},
+  {id:4, name:"廃酸"}, {id:5, name:"廃アルカリ"}, {id:6, name:"廃プラスチック類"},
+  {id:7, name:"紙くず"}, {id:8, name:"木くず"}, {id:9, name:"繊維くず"},
+  {id:10, name:"動植物性残さ"}, {id:11, name:"ゴムくず"}, {id:12, name:"金属くず"},
+  {id:13, name:"ガラス・コンクリート・陶磁器くず"}, {id:14, name:"鉱さい"},
+  {id:15, name:"がれき類"}, {id:16, name:"ばいじん"}, {id:17, name:"動物のふん尿"},
+  {id:18, name:"動物の死体"}, {id:19, name:"13号廃棄物"}, {id:20, name:"石綿含有産業廃棄物"}
+];
+
+// 取扱状態（ランダムに設定）
+var permitItems = {};
+permitItems[1]  = {handling:true,  transfer:true};   // 燃え殻 ◎
+permitItems[2]  = {handling:true,  transfer:false};   // 汚泥 〇
+permitItems[3]  = {handling:true,  transfer:false};   // 廃油 〇
+permitItems[6]  = {handling:true,  transfer:true};    // 廃プラ ◎
+permitItems[7]  = {handling:true,  transfer:false};   // 紙くず 〇
+permitItems[8]  = {handling:true,  transfer:false};   // 木くず 〇
+permitItems[12] = {handling:true,  transfer:true};    // 金属くず ◎
+permitItems[13] = {handling:true,  transfer:false};   // ガラス等 〇
+permitItems[15] = {handling:true,  transfer:false};   // がれき類 〇
+permitItems[16] = {handling:true,  transfer:false};   // ばいじん 〇
+// 残りは取扱なし（×）
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function getStatus(itemId) {
+  var pi = permitItems[itemId];
+  if (!pi) return "none";
+  if (pi.transfer) return "transfer";
+  if (pi.handling) return "handling";
+  return "none";
+}
+
+function render() {
+  var html = "";
+
+  // ==============================
+  // 現行方式（横テーブル）
+  // ==============================
+  html += "<div class='panel'>";
+  html += "<div class='panel-title'>現行: 横テーブル（はみ出す問題あり）</div>";
+  html += "<div class='overflow-box'>";
+  html += "<table class='current-table'><tr>";
+  for (var i = 0; i < allItems.length; i++) {
+    html += "<th>" + escapeHtml(allItems[i].name) + "</th>";
+  }
+  html += "</tr><tr>";
+  for (var i = 0; i < allItems.length; i++) {
+    var st = getStatus(allItems[i].id);
+    var mark = st === "transfer" ? "<span class='mark-transfer'>◎</span>"
+             : st === "handling" ? "<span class='mark-handling'>〇</span>"
+             : "<span class='mark-none'>×</span>";
+    html += "<td>" + mark + "</td>";
+  }
+  html += "</tr></table>";
+  html += "</div>";
+  html += "<p class='auto-label'>〇=取扱 ◎=積替保管 ×=なし</p>";
+  html += "</div>";
+
+  // ==============================
+  // A: タグ/チップ方式（取扱ありのみ）
+  // ==============================
+  html += "<div class='panel'>";
+  html += "<div class='panel-title'>A案: タグ/チップ方式（取扱ありのみ表示）</div>";
+  html += "<div class='section-heading'>取扱品目</div>";
+  html += "<div class='tag-container'>";
+  for (var i = 0; i < allItems.length; i++) {
+    var st = getStatus(allItems[i].id);
+    if (st === "none") continue;
+    var cls = st === "transfer" ? "transfer" : "handling";
+    var prefix = st === "transfer" ? "◎ " : "〇 ";
+    html += "<span class='item-tag " + cls + "'>" + prefix + escapeHtml(allItems[i].name) + "</span>";
+  }
+  html += "</div>";
+  html += "<p class='auto-label'>〇=取扱 ◎=積替保管（取扱なしは非表示）</p>";
+  html += "</div>";
+
+  // ==============================
+  // B: 折り返しグリッド（全品目表示）
+  // ==============================
+  html += "<div class='panel'>";
+  html += "<div class='panel-title'>B案: 折り返しグリッド（全品目表示）</div>";
+  html += "<div class='section-heading'>取扱品目</div>";
+  html += "<div class='grid-container'>";
+  for (var i = 0; i < allItems.length; i++) {
+    var st = getStatus(allItems[i].id);
+    var cls = st === "transfer" ? "transfer" : st === "handling" ? "handling" : "none";
+    var mark = st === "transfer" ? "◎" : st === "handling" ? "〇" : "×";
+    html += "<span class='grid-chip " + cls + "'>" + escapeHtml(allItems[i].name) + " " + mark + "</span>";
+  }
+  html += "</div>";
+  html += "<p class='auto-label'>〇=取扱 ◎=積替保管 ×=なし</p>";
+  html += "</div>";
+
+  // ==============================
+  // C: 2列テーブル（取扱ありのみ）
+  // ==============================
+  html += "<div class='panel'>";
+  html += "<div class='panel-title'>C案: 2列テーブル（取扱ありのみ）</div>";
+  html += "<div class='section-heading'>取扱品目</div>";
+  html += "<table class='vtable'>";
+  html += "<tr><th>品目名</th><th>区分</th></tr>";
+  for (var i = 0; i < allItems.length; i++) {
+    var st = getStatus(allItems[i].id);
+    if (st === "none") continue;
+    var markHtml = st === "transfer"
+      ? "<span class='mark-transfer'>◎ 積替保管</span>"
+      : "<span class='mark-handling'>〇 取扱</span>";
+    html += "<tr><td>" + escapeHtml(allItems[i].name) + "</td><td class='mark-cell'>" + markHtml + "</td></tr>";
+  }
+  html += "</table>";
+  html += "<p class='auto-label'>取扱なしの品目は非表示</p>";
+  html += "</div>";
+
+  // ==============================
+  // D: 縦リスト
+  // ==============================
+  html += "<div class='panel'>";
+  html += "<div class='panel-title'>D案: 縦リスト（取扱ありのみ）</div>";
+  html += "<div class='section-heading'>取扱品目</div>";
+  html += "<ul class='vlist'>";
+  for (var i = 0; i < allItems.length; i++) {
+    var st = getStatus(allItems[i].id);
+    if (st === "none") continue;
+    var mark = st === "transfer"
+      ? "<span class='mark-transfer'>◎</span>"
+      : "<span class='mark-handling'>〇</span>";
+    var suffix = st === "transfer" ? "<span style='font-size:11px;color:#888;'>（積替保管）</span>" : "";
+    html += "<li>" + mark + " " + escapeHtml(allItems[i].name) + " " + suffix + "</li>";
+  }
+  html += "</ul>";
+  html += "<p class='auto-label'>〇=取扱 ◎=積替保管（取扱なしは非表示）</p>";
+  html += "</div>";
+
+  document.getElementById("content").innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>

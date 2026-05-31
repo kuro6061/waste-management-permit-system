@@ -1,0 +1,4 @@
+﻿CREATE TABLE [マスター_管理区分] (
+  [管理区分ID] AUTOINCREMENT CONSTRAINT [PrimaryKey] PRIMARY KEY UNIQUE NOT NULL,
+  [管理区分名] VARCHAR (255)
+)
