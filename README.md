@@ -86,9 +86,9 @@ DB接続時は、内部で `Microsoft.ACE.OLEDB.16.0`, `Microsoft.ACE.OLEDB.12.0
 
 ## 公開リポジトリでの注意
 
-この公開用フォルダには、実データ入りの Access DB、旧システムDB、取り込みCSV、Excel、レビュー資料、ローカル設定を含めていません。
+このリポジトリは、画面・ロジック・テーブル構成を確認するための公開サンプルです。利用時は、同梱のサンプルDBまたは利用者が用意した Access DB を設定画面から指定して使います。
 
-`.gitignore` で `*.accdb`, `*.mdb`, `bridge/`, `data/`, `tmp/`, `docs/reviews/`, `.mcp.json` などを除外しています。実データやローカル専用ファイルは、公開リポジトリへ追加しないでください。
+`.gitignore` では、環境ごとに生成される作業用フォルダや一時ファイルを除外しています。公開リポジトリには、再現に必要なソース、仕様、テスト、サンプル構成のみを置く方針です。
 
 ## テスト
 
@@ -104,4 +104,4 @@ DB接続を含むテスト:
 npm run test:db
 ```
 
-Access Database Engine やローカルDBがない環境では、DB接続が必要な pytest は skip されます。
+Access Database Engine やDB接続先がない環境では、DB接続が必要な pytest は skip されます。
